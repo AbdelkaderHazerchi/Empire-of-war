@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>⚔️ امبراطورية الحرب</title>
+<title>⚔️ امبراطورية الحرب V1.5</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Tajawal:wght@400;700;900&display=swap');
 :root{
@@ -363,6 +363,52 @@ body{
 }
 .ovl-btn:hover{background:#2a5a2a;}
 
+/* ===========================
+   ACHIEVEMENTS MODAL
+   =========================== */
+#ach-modal{
+  position:fixed;inset:0;z-index:150;
+  background:rgba(0,0,0,.88);
+  display:none;align-items:center;justify-content:center;
+}
+.ach-box{
+  background:#080f08;border:2px solid var(--brd);
+  border-radius:12px;width:min(680px,95vw);
+  max-height:88dvh;display:flex;flex-direction:column;
+  overflow:hidden;direction:rtl;
+}
+.ach-header{
+  padding:14px 20px;border-bottom:1px solid var(--brd);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.ach-header h2{font-family:'Cinzel',serif;color:var(--gold);font-size:18px;}
+.ach-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+  gap:10px;padding:16px;overflow-y:auto;
+}
+.ach-grid::-webkit-scrollbar{width:4px;}
+.ach-grid::-webkit-scrollbar-thumb{background:#1a3a1a;}
+.ach-card{
+  background:#0c180c;border:1px solid #1a321a;
+  border-radius:8px;padding:10px 12px;
+  transition:border-color .2s;
+}
+.ach-card.unlocked{border-color:#3a7a3a;background:#0e1e0e;}
+.ach-card.unlocked .ach-icon{opacity:1;filter:none;}
+.ach-icon{font-size:28px;margin-bottom:6px;opacity:.3;filter:grayscale(1);}
+.ach-name{font-size:12px;color:#90c090;font-weight:700;margin-bottom:3px;}
+.ach-desc{font-size:10px;color:#507050;line-height:1.5;}
+.ach-prog{
+  margin-top:6px;height:3px;background:#0a140a;border-radius:2px;overflow:hidden;
+}
+.ach-prog-bar{height:100%;background:#2a6a2a;border-radius:2px;transition:width .3s;}
+.ach-stats{
+  padding:12px 16px;border-top:1px solid #101e10;
+  display:flex;gap:16px;flex-wrap:wrap;flex-shrink:0;
+}
+.ach-stat{font-size:12px;color:#507050;}
+.ach-stat b{color:#70b070;}
+
 /* Responsive */
 @media(max-width:600px){
   #sidebar{width:150px;}
@@ -417,7 +463,7 @@ body{
   </div>
 
   <!-- MAIN AREA -->
-  <div id="main-area" style="flex:1;display:flex;overflow:hidden;min-height:0;">
+  <div id="main-area" style="flex:1;display:flex;overflow:hidden;min-height:0;direction:ltr;">
 
     <!-- TOOLBAR (left in screen space) -->
     <div id="toolbar">
@@ -431,11 +477,12 @@ body{
         🚶<small>أمر</small>
       </button>
       <div class="tb-sep"></div>
-      <button class="tb-btn" title="تكبير" onclick="camZoomAt(null,0.25)">🔍<small>+</small></button>
-      <button class="tb-btn" title="تصغير" onclick="camZoomAt(null,-0.25)">🔍<small>-</small></button>
+      <button class="tb-btn" title="تكبير" onclick="camZoomSmoothAt(null,0.25)">🔍<small>+</small></button>
+      <button class="tb-btn" title="تصغير" onclick="camZoomSmoothAt(null,-0.25)">🔍<small>-</small></button>
       <button class="tb-btn" title="عرض كامل" onclick="fitMap()">⊞<small>كل</small></button>
       <div class="tb-sep"></div>
       <button class="tb-btn" title="دليل اللعبة" onclick="showGuide()">❓<small>دليل</small></button>
+      <button class="tb-btn" title="الإنجازات" onclick="showAch()">🏅<small>إنجاز</small></button>
       <button class="tb-btn" title="الشاشة الرئيسية" onclick="backToMenu()">🏠<small>قائمة</small></button>
     </div>
 
@@ -466,6 +513,7 @@ body{
         <button class="sb-btn" onclick="selBuild('forge')"><span>🔨 مسبك</span><span class="cost">🪙120 ⚙️50</span></button>
         <button class="sb-btn" onclick="selBuild('tower')"><span>🗼 برج مراقبة</span><span class="cost">🪙90 🪨50</span></button>
         <button class="sb-btn" onclick="selBuild('wall')"><span>🧱 سور دفاعي</span><span class="cost">🪙30 🪨20</span></button>
+        <button class="sb-btn" onclick="selBuild('bridge')" title="يُبنى على الماء والجبال"><span>🌉 معبر</span><span class="cost">🪙60 🪨40</span></button>
       </div>
       <div class="sb-sec">
         <h3>🪖 تدريب جنود</h3>
@@ -522,6 +570,18 @@ body{
   <button class="ovl-btn" onclick="restartMap()">إعادة المحاولة</button>
   <button class="ovl-btn" onclick="backToMenu()">القائمة الرئيسية</button>
 </div></div>
+
+<!-- ACHIEVEMENTS MODAL -->
+<div id="ach-modal">
+  <div class="ach-box">
+    <div class="ach-header">
+      <h2>🏅 الإنجازات</h2>
+      <button class="guide-close" onclick="closeAch()">✕</button>
+    </div>
+    <div class="ach-stats" id="ach-stats"></div>
+    <div class="ach-grid" id="ach-grid"></div>
+  </div>
+</div>
 
 <!-- TOOLTIP -->
 <div id="tooltip"></div>
@@ -636,7 +696,8 @@ const BCFG = {
   well:    {icon:'💧',w:1,h:1,hp:60, cost:{gold:40},            gen:{water:6},       maxPop:0,label:'بئر ماء',       desc:'+6 ماء/ث'},
   forge:   {icon:'🔨',w:2,h:2,hp:120,cost:{gold:120,metal:50}, gen:{metal:1.5},     maxPop:0,atkBonus:4,label:'مسبك', desc:'+4 هجوم لجميع وحداتك. +1.5 معدن/ث'},
   tower:   {icon:'🗼',w:1,h:2,hp:180,cost:{gold:90,stone:50},  gen:{},              maxPop:0,range:7,dmg:12,label:'برج مراقبة',desc:'يهاجم الأعداء في نطاق 7 مربعات تلقائياً.'},
-  wall:    {icon:'🧱',w:1,h:1,hp:300,cost:{gold:30,stone:20},  gen:{},              maxPop:0,label:'سور دفاعي',desc:'حاجز غير قابل للاختراق بصحة عالية.'}
+  wall:    {icon:'🧱',w:1,h:1,hp:300,cost:{gold:30,stone:20},  gen:{},              maxPop:0,label:'سور دفاعي',desc:'حاجز غير قابل للاختراق بصحة عالية.'},
+  bridge:  {icon:'🌉',w:1,h:1,hp:200,cost:{gold:60,stone:40}, gen:{},              maxPop:0,label:'معبر',       desc:'يسمح بعبور الماء والجبال. أساسي للتوسع!'}
 };
 const UCFG = {
   soldier:{icon:'🗡️',col:'#3a8a3a',ecol:'#8a2a2a',hp:70, atk:10,def:4, spd:1.5,rng:1.3,cost:{gold:30,water:10},  label:'جندي',       desc:'مقاتل متوازن — خيار ممتاز للسيطرة.'},
@@ -645,9 +706,9 @@ const UCFG = {
   siege:  {icon:'🪨',col:'#606060',ecol:'#804040',hp:80, atk:40,def:2, spd:0.5,rng:6.0,cost:{gold:180,metal:60,stone:50},label:'مدفع حجري',desc:'دمار هائل للمباني — بطيء جداً، لا يتعامل مع الوحدات.'}
 };
 const DIFF_CFG = {
-  easy:  {aiInt:12,atkInt:120,resMul:0.65,aggr:0.3,cap:8, atkSz:3, label:'سهل'},
-  medium:{aiInt:6, atkInt:55, resMul:1.0, aggr:0.6,cap:15,atkSz:6, label:'متوسط'},
-  hard:  {aiInt:3, atkInt:25, resMul:1.6, aggr:0.9,cap:24,atkSz:11,label:'صعب'}
+  easy:  {aiInt:8,  atkInt:100, resMul:0.75, aggr:0.35, cap:10, atkSz:4,  maxH:3,  label:'سهل'},
+  medium:{aiInt:5,  atkInt:60,  resMul:1.0,  aggr:0.55, cap:16, atkSz:7,  maxH:4,  label:'متوسط'},
+  hard:  {aiInt:3,  atkInt:40,  resMul:1.25, aggr:0.7,  cap:22, atkSz:10, maxH:5,  label:'صعب'}
 };
 
 // ================================================================
@@ -859,9 +920,13 @@ let selDrag=null;  // {sx,sy} selection box start (screen space)
 // ================================================================
 function walkable(x,y){
   if(x<0||x>=MW||y<0||y>=MH) return false;
+  // Check if a bridge exists on this tile (allows crossing water/mountains)
+  const hasBridge=[...P.buildings,...B.buildings].some(b=>b.type==='bridge'&&b.tx===x&&b.ty===y);
+  if(hasBridge) return true;
   if(!WALK[map2d[y][x]]) return false;
   for(const b of [...P.buildings,...B.buildings]){
     const c=BCFG[b.type];
+    if(b.type==='bridge') continue;
     if(x>=b.tx&&x<b.tx+c.w&&y>=b.ty&&y<b.ty+c.h) return false;
   }
   return true;
@@ -915,16 +980,20 @@ function clampCam(){
 }
 function fitMap(){
   const ww=MW*TS,wh=MH*TS;
+  // Fit zoom so entire map is visible
   cam.zoom=Math.min(cv.width/ww,cv.height/wh,cam.maxZ);
   cam.zoom=Math.max(cam.zoom,cam.minZ);
-  cam.x=(ww-cv.width/cam.zoom)/2;
-  cam.y=(wh-cv.height/cam.zoom)/2;
+  // Center the map in the canvas
+  cam.x=(ww - cv.width/cam.zoom)/2;
+  cam.y=(wh - cv.height/cam.zoom)/2;
+  targetZoom=cam.zoom;
   clampCam();
 }
 function camZoomAt(pivot,delta){
   const px=pivot?pivot.x:cv.width/2,py=pivot?pivot.y:cv.height/2;
   const wx=px/cam.zoom+cam.x,wy=py/cam.zoom+cam.y;
   cam.zoom=Math.max(cam.minZ,Math.min(cam.maxZ,cam.zoom+delta));
+  targetZoom=cam.zoom;
   cam.x=wx-px/cam.zoom;cam.y=wy-py/cam.zoom;clampCam();
 }
 
@@ -1017,6 +1086,7 @@ function spawnUnit(owner,type,tx,ty){
 function loop(ts){
   const dt=Math.min((ts-lastTs)/1000,.08);lastTs=ts;
   if(running&&!gameover){update(dt);}
+  updateSmoothZoom();
   render();
   rafId=requestAnimationFrame(loop);
 }
@@ -1111,7 +1181,17 @@ function updateUnits(owner,enemy,dt){
             }
           }
           u.kills++;
-          if(u.kills>=3*u.level&&u.level<3){u.level++;u.atk+=3;u.def+=1;u.maxHp+=20;u.hp=Math.min(u.hp+20,u.maxHp);if(owner===P)notify(`⭐ وحدة رُقِّيت إلى مستوى ${u.level}!`);}
+          if(owner===P){
+            achievements.kills++;
+            checkAchievements();
+          }
+          if(u.kills>=3*u.level&&u.level<3){u.level++;u.atk+=3;u.def+=1;u.maxHp+=20;u.hp=Math.min(u.hp+20,u.maxHp);
+            if(owner===P){
+              achievements.maxLevel=Math.max(achievements.maxLevel,u.level);
+              notify(`⭐ وحدة رُقِّيت إلى مستوى ${u.level}!`);
+              saveAchievements();checkAchievements();
+            }
+          }
           u.target=null;u.state='idle';continue;
         }
         continue;
@@ -1159,7 +1239,7 @@ function updateTowers(owner,enemy,dt){
 }
 
 // ================================================================
-//  BOT AI
+//  BOT AI — معتدل ومتوازن لكل مستوى
 // ================================================================
 function updateBotAI(dt){
   const dc=DIFF_CFG[curDiff];
@@ -1167,49 +1247,92 @@ function updateBotAI(dt){
   if(B.aiTimer<dc.aiInt)return;
   B.aiTimer=0;
   const castle=B.buildings.find(b=>b.type==='castle');if(!castle)return;
-  const cnt={};for(const b of B.buildings)cnt[b.type]=(cnt[b.type]||0)+1;
-  const hasForge=cnt.forge>0,hasMine=cnt.mine>0,hasBarracks=cnt.barracks>0,hasWell=cnt.well>0;
-  const houses=cnt.house||0;
-  const maxH=curDiff==='hard'?5:curDiff==='medium'?3:2;
-  // Build priority
-  if(!hasMine&&afford(B,BCFG.mine.cost)) botBuild('mine',castle);
-  else if(houses<maxH&&afford(B,BCFG.house.cost)) botBuild('house',castle);
-  else if(!hasBarracks&&afford(B,BCFG.barracks.cost)) botBuild('barracks',castle);
-  else if(!hasWell&&afford(B,BCFG.well.cost)) botBuild('well',castle);
-  else if(curDiff==='hard'&&!hasForge&&afford(B,BCFG.forge.cost)){botBuild('forge',castle);}
-  else if(curDiff==='hard'&&!cnt.tower&&afford(B,BCFG.tower.cost)) botBuild('tower',castle);
-  else if(curDiff==='hard'&&!cnt.quarry&&afford(B,BCFG.quarry.cost)) botBuild('quarry',castle);
-  // Train
-  if(hasBarracks&&B.pop<dc.cap&&B.pop<B.maxPop){
-    if(curDiff==='hard'){
-      if(afford(B,UCFG.knight.cost)&&Math.random()>.5) botTrain('knight');
-      else if(afford(B,UCFG.archer.cost)&&Math.random()>.4) botTrain('archer');
-      else if(afford(B,UCFG.soldier.cost)) botTrain('soldier');
-    } else if(curDiff==='medium'){
-      if(afford(B,UCFG.archer.cost)&&Math.random()>.5) botTrain('archer');
-      else if(afford(B,UCFG.soldier.cost)) botTrain('soldier');
-    } else {if(afford(B,UCFG.soldier.cost))botTrain('soldier');}
+
+  // --- عد المباني الحالية ---
+  const cnt={};
+  for(const b of B.buildings) cnt[b.type]=(cnt[b.type]||0)+1;
+  const hasMine    = cnt.mine>0;
+  const hasBarracks= cnt.barracks>0;
+  const hasWell    = cnt.well>0;
+  const hasQuarry  = cnt.quarry>0;
+  const hasForge   = cnt.forge>0;
+  const hasTower   = cnt.tower>0;
+  const houses     = cnt.house||0;
+  const maxH       = dc.maxH;
+
+  // --- أولويات البناء حسب المستوى ---
+  // الخطوة 1: دائماً ابنِ منجماً أولاً
+  if(!hasMine && afford(B,BCFG.mine.cost)){
+    botBuild('mine',castle); return;
   }
-  // Defend if under attack
+  // الخطوة 2: ابنِ منزلاً لزيادة عدد الجنود
+  if(houses<maxH && afford(B,BCFG.house.cost)){
+    botBuild('house',castle); return;
+  }
+  // الخطوة 3: ثكنة عسكرية للتدريب
+  if(!hasBarracks && afford(B,BCFG.barracks.cost)){
+    botBuild('barracks',castle); return;
+  }
+  // الخطوة 4: بئر للموارد المائية
+  if(!hasWell && afford(B,BCFG.well.cost)){
+    botBuild('well',castle); return;
+  }
+  // الخطوة 5 (متوسط+): محجرة للحجر
+  if(curDiff!=='easy' && !hasQuarry && afford(B,BCFG.quarry.cost)){
+    botBuild('quarry',castle); return;
+  }
+  // الخطوة 6 (صعب): مسبك وبرج ومنازل إضافية
+  if(curDiff==='hard'){
+    if(!hasForge  && afford(B,BCFG.forge.cost)){botBuild('forge',castle);return;}
+    if(!hasTower  && afford(B,BCFG.tower.cost)){botBuild('tower',castle);return;}
+    if(houses<maxH+1 && afford(B,BCFG.house.cost)){botBuild('house',castle);return;}
+  }
+
+  // --- تدريب الجنود ---
+  if(hasBarracks && B.pop<dc.cap && B.pop<B.maxPop){
+    if(curDiff==='easy'){
+      // سهل: فقط جنود عاديون
+      if(afford(B,UCFG.soldier.cost)) botTrain('soldier');
+    } else if(curDiff==='medium'){
+      // متوسط: جنود وقوسيون بالتناوب
+      const rand=Math.random();
+      if(rand<0.45 && afford(B,UCFG.archer.cost)) botTrain('archer');
+      else if(afford(B,UCFG.soldier.cost)) botTrain('soldier');
+    } else {
+      // صعب: تشكيلة متنوعة من الوحدات
+      const rand=Math.random();
+      if(rand<0.3 && afford(B,UCFG.knight.cost)) botTrain('knight');
+      else if(rand<0.55 && afford(B,UCFG.archer.cost)) botTrain('archer');
+      else if(afford(B,UCFG.soldier.cost)) botTrain('soldier');
+    }
+  }
+
+  // --- الدفاع عند الهجوم ---
   const pcNear=P.units.filter(u=>{
     const bx=castle.tx+1.5,by=castle.ty+1.5;
-    return Math.sqrt((u.x/TS-bx)**2+(u.y/TS-by)**2)<14;
+    return Math.sqrt((u.x/TS-bx)**2+(u.y/TS-by)**2)<12;
   });
-  if(pcNear.length>0&&B.units.length>0){
-    for(const u of B.units) if(u.state!=='atk') botMoveUnit(u,castle.tx+3+Math.random()*4|0,castle.ty+3+Math.random()*4|0);
+  if(pcNear.length>0 && B.units.length>0){
+    for(const u of B.units){
+      if(u.state!=='atk') botMoveUnit(u,castle.tx+2+Math.random()*4|0,castle.ty+2+Math.random()*4|0);
+    }
     return;
   }
-  // Attack
+
+  // --- الهجوم ---
   if(B.atkTimer>=dc.atkInt){
-    if(B.pop>=dc.aggr*5+2||B.atkTimer>=dc.atkInt*2){B.atkTimer=0;botAttack(dc.atkSz);}
+    const minPop=Math.floor(dc.aggr*6+2);
+    if(B.pop>=minPop||B.atkTimer>=dc.atkInt*1.8){
+      B.atkTimer=0; botAttack(dc.atkSz);
+    }
   }
 }
 function botBuild(type,castle){
   const c=BCFG[type];if(!afford(B,c.cost))return;
-  for(let a=0;a<40;a++){
-    const tx=castle.tx+Math.floor(Math.random()*14)-3;
-    const ty=castle.ty+Math.floor(Math.random()*12)-1;
-    if(canPlace(B,tx,ty,c.w,c.h)){spend(B,c.cost);placeBuilding(B,type,tx,ty);return;}
+  for(let a=0;a<50;a++){
+    const tx=castle.tx+Math.floor(Math.random()*16)-4;
+    const ty=castle.ty+Math.floor(Math.random()*14)-2;
+    if(canPlace(B,tx,ty,c.w,c.h,type)){spend(B,c.cost);placeBuilding(B,type,tx,ty);return;}
   }
 }
 function botTrain(type){
@@ -1272,7 +1395,7 @@ function render(){
   // Build ghost
   if(tool==='build'&&buildType&&hovTile.x>=0){
     const c=BCFG[buildType];
-    const ok=canPlace(P,hovTile.x,hovTile.y,c.w,c.h);
+    const ok=canPlace(P,hovTile.x,hovTile.y,c.w,c.h,buildType);
     ctx.fillStyle=ok?'rgba(0,220,80,.25)':'rgba(220,30,30,.25)';
     ctx.fillRect(hovTile.x*TS,hovTile.y*TS,c.w*TS,c.h*TS);
     ctx.strokeStyle=ok?'#00e850':'#e82020';ctx.lineWidth=1.5;
@@ -1313,10 +1436,26 @@ function drawBuildings(blds,isP){
     const c=BCFG[b.type];
     const px=b.tx*TS,py=b.ty*TS,pw=c.w*TS,ph=c.h*TS;
     const dr=b.hp/b.maxHp;
+    // Background
     ctx.fillStyle=isP?'#0e1e0e':'#1e0808';ctx.fillRect(px+1,py+1,pw-2,ph-2);
     ctx.strokeStyle=isP?(dr>.5?'#3a7a3a':'#7a4a2a'):(dr>.5?'#7a2a2a':'#7a5a2a');
     ctx.lineWidth=1.5;ctx.strokeRect(px+1,py+1,pw-2,ph-2);
-    ctx.font=`${Math.min(pw,ph)*.55}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    // Bridge special render: draw a tan plank over the tile
+    if(b.type==='bridge'){
+      ctx.fillStyle=isP?'#8b6914':'#6b4910';
+      ctx.fillRect(px+2,py+6,pw-4,ph-12);
+      ctx.fillStyle='#c8a050';
+      for(let plank=0;plank<3;plank++){
+        ctx.fillRect(px+2+plank*(pw-4)/3,py+6,Math.max(2,(pw-8)/3),ph-12);
+      }
+      ctx.fillStyle='#111';ctx.fillRect(px+1,py+ph-3,pw-2,3);
+      ctx.fillStyle='#8b6914';ctx.fillRect(px+1,py+ph-3,(pw-2)*dr,3);
+      continue;
+    }
+    // Icon — use emoji font, scale to building size
+    const iconSize=Math.max(10,Math.min(pw,ph)*.55);
+    ctx.font=`${iconSize}px "Segoe UI Emoji","Apple Color Emoji",serif`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText(c.icon,px+pw/2,py+ph/2);
     // HP bar
     ctx.fillStyle='#111';ctx.fillRect(px+1,py+ph-3,pw-2,3);
@@ -1334,16 +1473,17 @@ function drawUnits(units,isP){
     // Body
     ctx.fillStyle=col;ctx.beginPath();ctx.arc(u.x,u.y,6.5,0,Math.PI*2);ctx.fill();
     ctx.strokeStyle=isP?'#70e070':'#e07070';ctx.lineWidth=1;ctx.beginPath();ctx.arc(u.x,u.y,6.5,0,Math.PI*2);ctx.stroke();
-    // Icon
-    ctx.font='9px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(c.icon,u.x,u.y);
+    // Icon — emoji font for reliable rendering
+    ctx.font='10px "Segoe UI Emoji","Apple Color Emoji",serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(c.icon,u.x,u.y);
     // Level stars
-    if(u.level>1){ctx.fillStyle='#ffcc00';ctx.font='8px serif';ctx.fillText('★'.repeat(u.level-1),u.x,u.y-14);}
+    if(u.level>1){ctx.fillStyle='#ffcc00';ctx.font='bold 8px sans-serif';ctx.fillText('★'.repeat(u.level-1),u.x,u.y-14);}
     // HP bar
     const hr=u.hp/u.maxHp;
     ctx.fillStyle='#111';ctx.fillRect(u.x-7,u.y-12,14,2);
     ctx.fillStyle=hr>.5?'#40d040':hr>.25?'#d0d040':'#d04040';ctx.fillRect(u.x-7,u.y-12,14*hr,2);
-    // State
-    if(u.state==='atk'){ctx.font='8px serif';ctx.fillText('⚔️',u.x,u.y-18);}
+    // Attack indicator
+    if(u.state==='atk'){ctx.font='8px "Segoe UI Emoji",serif';ctx.fillText('⚔️',u.x,u.y-18);}
   }
 }
 function renderMinimap(){
@@ -1370,7 +1510,7 @@ function renderMinimap(){
 //  INPUT
 // ================================================================
 function initInput(){
-  cv.addEventListener('wheel',e=>{e.preventDefault();camZoomAt({x:e.offsetX,y:e.offsetY},e.deltaY<0?.2:-.2);},{passive:false});
+  cv.addEventListener('wheel',e=>{e.preventDefault();camZoomSmoothAt({x:e.offsetX,y:e.offsetY},e.deltaY<0?.15:-.15);},{passive:false});
   cv.addEventListener('mousedown',onCvDown);
   cv.addEventListener('mousemove',onCvMove);
   cv.addEventListener('mouseup',onCvUp);
@@ -1378,6 +1518,53 @@ function initInput(){
   cv.addEventListener('contextmenu',e=>{e.preventDefault();cancelMode();});
   mmcv.addEventListener('click',onMiniClick);
   document.addEventListener('keydown',onKey);
+
+  // ---- Touch support ----
+  let lastTouchDist=0,lastTouchX=0,lastTouchY=0,touchPan=false;
+  cv.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    if(e.touches.length===2){
+      lastTouchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      touchPan=false;
+    } else if(e.touches.length===1){
+      lastTouchX=e.touches[0].clientX;lastTouchY=e.touches[0].clientY;
+      touchPan=true;
+      panDrag={sx:lastTouchX,sy:lastTouchY,cx:cam.x,cy:cam.y};
+    }
+  },{passive:false});
+  cv.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    if(e.touches.length===2){
+      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      const delta=(d-lastTouchDist)*0.007;
+      const mx=(e.touches[0].clientX+e.touches[1].clientX)/2;
+      const my=(e.touches[0].clientY+e.touches[1].clientY)/2;
+      const rect=cv.getBoundingClientRect();
+      camZoomSmoothAt({x:mx-rect.left,y:my-rect.top},delta);
+      lastTouchDist=d;
+    } else if(e.touches.length===1&&panDrag){
+      const sx=e.touches[0].clientX,sy=e.touches[0].clientY;
+      cam.x=panDrag.cx-(sx-panDrag.sx)/cam.zoom;
+      cam.y=panDrag.cy-(sy-panDrag.sy)/cam.zoom;
+      clampCam();
+    }
+  },{passive:false});
+  cv.addEventListener('touchend',e=>{
+    e.preventDefault();
+    if(e.touches.length===0){
+      const wasPan=panDrag&&(Math.abs(cam.x-(panDrag?panDrag.cx:cam.x))>2||Math.abs(cam.y-(panDrag?panDrag.cy:cam.y))>2);
+      panDrag=null;
+      if(!wasPan&&e.changedTouches.length===1){
+        const rect=cv.getBoundingClientRect();
+        const sx=e.changedTouches[0].clientX-rect.left;
+        const sy=e.changedTouches[0].clientY-rect.top;
+        const w=screenToWorld(sx,sy);
+        if(tool==='build'&&buildType) tryPlace(Math.floor(w.x/TS),Math.floor(w.y/TS));
+        else if(tool==='move'&&selUnits.length>0) moveUnitsTo(selUnits,Math.floor(w.x/TS),Math.floor(w.y/TS));
+        else onSingleClick({shiftKey:false,offsetX:sx,offsetY:sy},w);
+      }
+    }
+  },{passive:false});
 }
 function onCvDown(e){
   const sx=e.offsetX,sy=e.offsetY;
@@ -1466,8 +1653,8 @@ function onKey(e){
   if(e.key.toLowerCase()==='m')setTool('move');
   if(e.key.toLowerCase()==='a'){e.preventDefault();selectAll();}
   if(e.key.toLowerCase()==='f')orderAttack();
-  if(e.key==='='||e.key==='+')camZoomAt(null,.2);
-  if(e.key==='-')camZoomAt(null,-.2);
+  if(e.key==='='||e.key==='+')camZoomSmoothAt(null,.2);
+  if(e.key==='-')camZoomSmoothAt(null,-.2);
 }
 function updateTooltip(e,w){
   const tip=document.getElementById('tooltip');
@@ -1559,10 +1746,17 @@ function moveUnitsTo(units,tx,ty){
 // ================================================================
 //  BUILDING PLACEMENT
 // ================================================================
-function canPlace(owner,tx,ty,w,h){
+function canPlace(owner,tx,ty,w,h,type){
   if(tx<0||ty<0||tx+w>MW||ty+h>MH)return false;
+  const isBridge=(type==='bridge');
   for(let dy=0;dy<h;dy++) for(let dx=0;dx<w;dx++){
-    if(!WALK[map2d[ty+dy][tx+dx]])return false;
+    const tile=map2d[ty+dy][tx+dx];
+    if(isBridge){
+      // Bridge can only be placed on non-walkable tiles (water, mountain, rock, ice)
+      if(WALK[tile]) return false;
+    } else {
+      if(!WALK[tile])return false;
+    }
   }
   for(const b of [...P.buildings,...B.buildings]){
     const c=BCFG[b.type];
@@ -1584,9 +1778,13 @@ function fmtCost(cost){
 function tryPlace(tx,ty){
   const c=BCFG[buildType];
   if(!afford(P,c.cost)){notify('❌ موارد غير كافية! '+fmtCost(c.cost));return;}
-  if(!canPlace(P,tx,ty,c.w,c.h)){notify('❌ لا يمكن البناء هنا!');return;}
+  if(!canPlace(P,tx,ty,c.w,c.h,buildType)){notify('❌ لا يمكن البناء هنا!');return;}
   spend(P,c.cost);placeBuilding(P,buildType,tx,ty);
   notify(`✅ تم إنشاء ${c.label}!`);
+  // Track achievement
+  achievements.buildingsBuilt++;
+  if(buildType==='bridge') achievements.bridgesBuilt++;
+  saveAchievements();checkAchievements();
 }
 function trainU(type){
   const c=UCFG[type];
@@ -1608,6 +1806,8 @@ function updateUI(){
   document.getElementById('r-water').textContent=Math.floor(P.water);
   document.getElementById('r-metal').textContent=Math.floor(P.metal);
   document.getElementById('r-pop').textContent=`${P.pop}/${P.maxPop}`;
+  // Track achievements
+  if(P.pop>achievements.maxSoldiers){achievements.maxSoldiers=P.pop;checkAchievements();}
 }
 function showUnitInfo(u){
   const c=UCFG[u.type];
@@ -1637,6 +1837,7 @@ function notify(msg){
 // ================================================================
 function endGame(won){
   gameover=true;
+  if(won){achievements.mapsWon++;saveAchievements();checkAchievements();}
   setTimeout(()=>{
     if(won){
       const mdef=MAPS_DEF[curMapIdx];
@@ -1733,6 +1934,100 @@ function renderMapPreview(cvEl,mdef){
 }
 
 // ================================================================
+//  ACHIEVEMENTS SYSTEM — نظام الإنجازات
+// ================================================================
+const ACHIEVEMENTS_DEF = [
+  {id:'first_kill',  icon:'⚔️', name:'أول انتصار',      desc:'اهزم جندياً عدواً للمرة الأولى', req:u=>u.kills>=1},
+  {id:'kills10',     icon:'🗡️', name:'محارب',            desc:'اهزم 10 جنود أعداء',              req:u=>u.kills>=10},
+  {id:'kills50',     icon:'💀', name:'قاتل بارد',        desc:'اهزم 50 جندياً عدواً',            req:u=>u.kills>=50},
+  {id:'soldiers10',  icon:'🪖', name:'فرقة عسكرية',     desc:'وصول إلى 10 جنود في آنٍ واحد',   req:u=>u.maxSoldiers>=10},
+  {id:'soldiers20',  icon:'🛡️', name:'جيش متكامل',      desc:'وصول إلى 20 جندياً في آنٍ واحد', req:u=>u.maxSoldiers>=20},
+  {id:'build5',      icon:'🏗️', name:'باني',             desc:'ابنِ 5 مبانٍ',                    req:u=>u.buildingsBuilt>=5},
+  {id:'build15',     icon:'🏙️', name:'مدينة ناشئة',     desc:'ابنِ 15 مبنىً',                   req:u=>u.buildingsBuilt>=15},
+  {id:'win1',        icon:'🏆', name:'فاتح',              desc:'افتح أول خريطة',                  req:u=>u.mapsWon>=1},
+  {id:'win3',        icon:'👑', name:'قائد إمبراطورية',  desc:'افتح 3 خرائط',                    req:u=>u.mapsWon>=3},
+  {id:'win6',        icon:'⭐', name:'إمبراطور الأزمنة', desc:'افتح جميع الخرائط الست',          req:u=>u.mapsWon>=6},
+  {id:'bridge1',     icon:'🌉', name:'مهندس الطرق',      desc:'ابنِ أول معبر',                   req:u=>u.bridgesBuilt>=1},
+  {id:'level3',      icon:'🌟', name:'محارب نخبة',       desc:'رقِّ وحدة إلى المستوى 3',         req:u=>u.maxLevel>=3},
+];
+
+let achievements = {
+  kills:0, maxSoldiers:0, buildingsBuilt:0, mapsWon:0, bridgesBuilt:0, maxLevel:1,
+  unlocked:[]
+};
+
+function loadAchievements(){
+  try{
+    const saved=localStorage.getItem('warEmpire_ach');
+    if(saved){
+      const d=JSON.parse(saved);
+      Object.assign(achievements,d);
+    }
+  }catch(e){}
+}
+function saveAchievements(){
+  try{localStorage.setItem('warEmpire_ach',JSON.stringify(achievements));}catch(e){}
+}
+function checkAchievements(){
+  for(const a of ACHIEVEMENTS_DEF){
+    if(!achievements.unlocked.includes(a.id)&&a.req(achievements)){
+      achievements.unlocked.push(a.id);
+      saveAchievements();
+      notify(`🏅 إنجاز جديد: ${a.name}!`);
+    }
+  }
+}
+function showAch(){
+  const modal=document.getElementById('ach-modal');
+  modal.style.display='flex';
+  // Stats
+  document.getElementById('ach-stats').innerHTML=`
+    <div class="ach-stat">⚔️ إجمالي القتلى: <b>${achievements.kills}</b></div>
+    <div class="ach-stat">🪖 أكبر جيش: <b>${achievements.maxSoldiers}</b></div>
+    <div class="ach-stat">🏗️ المباني المبنية: <b>${achievements.buildingsBuilt}</b></div>
+    <div class="ach-stat">🏆 الخرائط المفتوحة: <b>${achievements.mapsWon}</b></div>
+    <div class="ach-stat">🌉 المعابر المبنية: <b>${achievements.bridgesBuilt}</b></div>
+  `;
+  // Grid
+  const grid=document.getElementById('ach-grid');
+  grid.innerHTML='';
+  for(const a of ACHIEVEMENTS_DEF){
+    const done=achievements.unlocked.includes(a.id);
+    const card=document.createElement('div');
+    card.className='ach-card'+(done?' unlocked':'');
+    card.innerHTML=`<div class="ach-icon">${a.icon}</div>
+      <div class="ach-name">${a.name}</div>
+      <div class="ach-desc">${a.desc}</div>`;
+    grid.appendChild(card);
+  }
+}
+function closeAch(){document.getElementById('ach-modal').style.display='none';}
+
+// ================================================================
+//  SMOOTH ZOOM
+// ================================================================
+let targetZoom=1;
+function camZoomSmoothAt(pivot,delta){
+  const px=pivot?pivot.x:cv.width/2,py=pivot?pivot.y:cv.height/2;
+  targetZoom=Math.max(cam.minZ,Math.min(cam.maxZ,targetZoom+delta));
+  // Store pivot for smooth animation
+  cam._pivot={px,py};
+}
+function updateSmoothZoom(){
+  if(Math.abs(cam.zoom-targetZoom)<0.005) return;
+  const prev=cam.zoom;
+  cam.zoom+=(targetZoom-cam.zoom)*0.18;
+  if(cam._pivot){
+    const px=cam._pivot.px,py=cam._pivot.py;
+    const wx=px/prev+cam.x;
+    const wy=py/prev+cam.y;
+    cam.x=wx-px/cam.zoom;
+    cam.y=wy-py/cam.zoom;
+  }
+  clampCam();
+}
+
+// ================================================================
 //  GUIDE
 // ================================================================
 const GUIDE_TABS=[
@@ -1796,8 +2091,8 @@ const GUIDE_TABS=[
       <div class="tile-item"><div class="tile-swatch" style="background:#e0eaf8"></div><span>ثلج — ✅ قابل للمشي</span></div>
       <div class="tile-item"><div class="tile-swatch" style="background:#285818"></div><span>غابة — ✅ قابل للمشي والبناء</span></div>
       <div class="tile-item"><div class="tile-swatch" style="background:#886840"></div><span>تراب — ✅ قابل للمشي والبناء</span></div>
-      <div class="tile-item"><div class="tile-swatch" style="background:#2068b0"></div><span>ماء/نهر — 🚫 غير قابل للعبور</span></div>
-      <div class="tile-item"><div class="tile-swatch" style="background:#786848"></div><span>جبل — 🚫 غير قابل للعبور</span></div>
+      <div class="tile-item"><div class="tile-swatch" style="background:#2068b0"></div><span>ماء/نهر — 🚫 غير قابل للعبور (يمكن بناء معبر)</span></div>
+      <div class="tile-item"><div class="tile-swatch" style="background:#786848"></div><span>جبل — 🚫 غير قابل للعبور (يمكن بناء معبر)</span></div>
       <div class="tile-item"><div class="tile-swatch" style="background:#686048"></div><span>صخرة — 🚫 غير قابلة للعبور</span></div>
       <div class="tile-item"><div class="tile-swatch" style="background:#b0cef0"></div><span>جليد — 🚫 غير قابل للعبور</span></div>
     </div>
@@ -1845,7 +2140,10 @@ function switchTab(i){
 // ================================================================
 //  INIT
 // ================================================================
-window.addEventListener('DOMContentLoaded',()=>{buildStartScreen();});
+window.addEventListener('DOMContentLoaded',()=>{
+  loadAchievements();
+  buildStartScreen();
+});
 </script>
 </body>
 </html>
